@@ -12,7 +12,24 @@ const createToken =(id)=>{
 
 //Route for user login
 const loginUser= async(req,res)=>{
+    try {
+        const {email,password}=req.body;
+        const user=await userModel.findOne({email})
+        if(!user){
+            return res.json({success:false, message:"User doesn't found"})
+        }
+        const isPasswordCorrect=await bcrypt.compare(password, user.password)
+        if(isPasswordCorrect){
+            const token=createToken(user._id)
+            res.json({success:true,token})
+        }else{
+            res.json({success:false,message:"invalid credentials"})
 
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({success:false, message:error.message})
+    }
 }
 
 //Route for user registration
@@ -25,16 +42,16 @@ const registerUser=async(req,res)=>{
    const userExists= await userModel.findOne({email})
 
    if(userExists){
-      return res.json({success:false, message: 'User already exists'})
+      return res.json({success:false, message: "User already exists"})
 
    }
    // Validating email format and strong password
    if(!validator.isEmail(email)){
-       return res.json({success:false, message: 'Please enter a valid email'})
+       return res.json({success:false, message: "Please enter a valid email"})
 
    }
    if (password.length < 8){
-       return res.json({success:false, message:'Please enter a strong password'})
+       return res.json({success:false, message:"Please enter a strong password"})
 
    }
    // Hash the password
@@ -63,6 +80,24 @@ const registerUser=async(req,res)=>{
 //Route for admin login
 
 const adminLogin=async(req,res)=>{
+    try {
+        const {email,password}=req.body;
+        
+        if(email===process.env.ADMIN_EMAIL && password===process.env.ADMIN_PASSWORD){
+            
+            const token=jwt.sign(email+password,process.env.JWT_SECRET)
+            res.json({success:true,token})
+
+        }else{
+
+            res.json({success:false,message:"Invalid Credentials"})
+
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.json({success:false, message:error.message})
+    }
 
 }
 
